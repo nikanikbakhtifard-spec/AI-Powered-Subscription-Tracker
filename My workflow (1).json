@@ -1,0 +1,225 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "fcca522f-f87f-4ec5-99dc-c1de23c3a561",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "33496121-7de2-43e1-9a62-52f1fe64ce83"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are Subscription Tracker, an assistant that records the user's subscriptions and recurring expenses in a Google Sheet using the AddEntry tool.\n\nToday's date: {{ $now.setZone('Europe/Rome').toFormat('yyyy-MM-dd') }} (timezone Europe/Rome). Use it when the user gives no charge date. Dates use the format YYYY-MM-DD.\n\nAddEntry appends one row with these fields:\n- Expense: short name of the service (e.g. ChatGPT, Netflix).\n- Charge_Date_: date of the charge. Default to today.\n- Cadense: one of Daily, Weekly, Biweekly, Monthly, Quarterly, Semiannually, Yearly.\n- Cost_: amount with its original currency (e.g. $20, EUR 15). Never convert or guess.\n- Status: one of Active, Trial, Paused, Cancelled. Default to Active; use Trial for a free trial.\n\nProcess:\n1. Extract the subscription details from the user's message. If the name, cost with currency, or cadence is missing, ask a short clarification question.\n2. Show a concise summary of the details and ask the user to confirm. Do not call AddEntry yet.\n3. After a clear confirmation (yes, correct, save, go ahead), call AddEntry once per subscription. If the user corrects something, update the summary and confirm again. If the user declines, do not save.\n4. After AddEntry succeeds, reply with a short confirmation. If it fails or the result is unclear, say the record could not be confirmed as saved and do not retry automatically, to avoid duplicates.\n\nRules:\n- Never invent details and never claim a row was saved unless the tool succeeded.\n- You can only append rows. You cannot read, edit, or cancel existing rows; say so if asked.\n- Keep replies friendly, concise, and focused on subscriptions."
+        }
+      },
+      "id": "dc3a9ed2-0c97-47e5-aa84-59b901ce9370",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "1ac13ffc-9717-4234-841e-4c1463feb408",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        160
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 14
+      },
+      "id": "0b5be9d7-4912-4116-811a-9ca3ce871f4d",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        288,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1dgw5BcXahL2WFmweLR93im_yf4v8_xW9vbN2fEEkcsQ/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dgw5BcXahL2WFmweLR93im_yf4v8_xW9vbN2fEEkcsQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Expense": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Expense', ``, 'string') }}",
+            "Charge Date ": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Charge_Date_', ``, 'string') }}",
+            "Cadense": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Cadense', ``, 'string') }}",
+            "Cost ": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Cost_', ``, 'string') }}",
+            "Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Status', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Expense",
+              "displayName": "Expense",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Charge Date ",
+              "displayName": "Charge Date ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cadense",
+              "displayName": "Cadense",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cost ",
+              "displayName": "Cost ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3b5b9df2-cfeb-44a8-b4aa-04f82c4865b1",
+      "name": "AddEntry",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        208
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Tn62pcmlLHNTtNUD",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AddEntry": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7864f9d2-e6d9-43b3-a018-17406252ffee",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3e9ac16fcf3f7728e4e5cf55d6e4199ae93528af5d692a45adaecfd237d5ebc7"
+  },
+  "nodeGroups": [],
+  "id": "habrVuauS64dHSOt",
+  "tags": []
+}
